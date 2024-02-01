@@ -25,6 +25,21 @@ class RemoteImpl(private val apiService: ApiService) : Remote {
         }
     }
 
+    override suspend fun getNextData(url: String): Home {
+        try {
+            val response = apiService.getNextPage(url)
+            if (response.isSuccessful) {
+                val nextPageData = response.body()
+                return nextPageData?.mapToHome() ?: throw IllegalStateException("Body is null")
+            } else {
+                throw throw IllegalStateException("Network request failed with code: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw IllegalStateException("Error fetching data", e)
+        }
+    }
+
     override suspend fun getPokemonDetails(url: String): PokemonDetails {
         try {
             val response = apiService.getPokemonDetails(url)

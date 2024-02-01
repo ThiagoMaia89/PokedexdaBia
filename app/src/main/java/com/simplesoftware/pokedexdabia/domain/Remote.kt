@@ -5,5 +5,6 @@ import com.simplesoftware.pokedexdabia.domain.models.PokemonDetails
 
 interface Remote {
     suspend fun getHomeData(): Home
+    suspend fun getNextData(url: String): Home
     suspend fun getPokemonDetails(url: String): PokemonDetails
 }

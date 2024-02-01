@@ -15,6 +15,9 @@ interface ApiService {
     suspend fun getHomeData(): Response<HomeResponse>
 
     @GET
+    suspend fun getNextPage(@Url url: String): Response<HomeResponse>
+
+    @GET
     suspend fun getPokemonDetails(@Url url: String): Response<PokemonDetailsResponse>
 
 }

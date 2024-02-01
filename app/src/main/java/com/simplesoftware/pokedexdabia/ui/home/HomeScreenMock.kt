@@ -15,37 +15,28 @@ class HomeScreenMock : PreviewParameterProvider<Home> {
                     previousUrl = null,
                     pokemonList = listOf(
                         Pokemon(
-                            url = null
+                            url = "https://pokeapi.co/api/v2/pokemon/1/"
                         ),
                         Pokemon(
-                            url = null
+                            url = "https://pokeapi.co/api/v2/pokemon/2/"
                         ),
                         Pokemon(
-                            url = null
+                            url = "https://pokeapi.co/api/v2/pokemon/3/"
                         ),
                         Pokemon(
-                            url = null
+                            url = "https://pokeapi.co/api/v2/pokemon/4/"
                         ),
                         Pokemon(
-                            url = null
+                            url = "https://pokeapi.co/api/v2/pokemon/5/"
                         ),
                         Pokemon(
-                            url = null
+                            url = "https://pokeapi.co/api/v2/pokemon/6/"
                         ),
                         Pokemon(
-                            url = null
+                            url = "https://pokeapi.co/api/v2/pokemon/7/"
                         ),
                         Pokemon(
-                            url = null
-                        ),
-                        Pokemon(
-                            url = null
-                        ),
-                        Pokemon(
-                            url = null
-                        ),
-                        Pokemon(
-                            url = null
+                            url = "https://pokeapi.co/api/v2/pokemon/8/"
                         )
                     )
                 )

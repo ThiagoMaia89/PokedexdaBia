@@ -1,5 +1,7 @@
 package com.simplesoftware.pokedexdabia.ui.home
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -39,6 +41,26 @@ class HomeViewModel(
                     pokemon.url?.let { url ->
                         _detailsData.value = remote.getPokemonDetails(url)
                         detailsData.value?.let { pokemonList.add(it) }
+                    }
+                }
+                _pokemonListData.value = pokemonList
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun loadNextPage() {
+        val url = homeData.value?.nextUrl ?: ""
+        viewModelScope.launch {
+            try {
+                _homeData.value = remote.getNextData(url)
+                homeData.value?.pokemonList?.forEach { pokemon ->
+                    pokemon.url?.let { url ->
+                        _detailsData.value = remote.getPokemonDetails(url)
+                        detailsData.value?.let {
+                            pokemonList.add(it)
+                        }
                     }
                 }
                 _pokemonListData.value = pokemonList

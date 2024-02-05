@@ -4,10 +4,14 @@ import com.simplesoftware.pokedexdabia.domain.models.Home
 import com.simplesoftware.pokedexdabia.domain.models.Pokemon
 import com.simplesoftware.pokedexdabia.domain.models.PokemonDetails
 import com.simplesoftware.pokedexdabia.domain.models.PokemonSprite
+import com.simplesoftware.pokedexdabia.domain.models.PokemonType
+import com.simplesoftware.pokedexdabia.domain.models.PokemonTypes
 import com.simplesoftware.pokedexdabia.network.models.HomeResponse
 import com.simplesoftware.pokedexdabia.network.models.PokemonDetailsResponse
 import com.simplesoftware.pokedexdabia.network.models.PokemonResponse
 import com.simplesoftware.pokedexdabia.network.models.PokemonSpriteResponse
+import com.simplesoftware.pokedexdabia.network.models.PokemonTypeResponse
+import com.simplesoftware.pokedexdabia.network.models.PokemonTypesResponse
 
 fun HomeResponse.mapToHome() =
     Home(
@@ -25,11 +29,26 @@ private fun PokemonResponse.mapToPokemon() =
 fun PokemonDetailsResponse.mapToPokemonDetails() =
     PokemonDetails(
         id = id,
-        name = name,
-        sprite = sprite?.mapToPokemonSprite()
+        name = name?.capitalizeFirstLetter(),
+        sprite = sprite?.mapToPokemonSprite(),
+        types = types?.map { it.mapToPokemonTypes() } ?: emptyList()
     )
 
 private fun PokemonSpriteResponse.mapToPokemonSprite() =
     PokemonSprite(
         imageUrl = imageUrl
     )
+
+private fun PokemonTypesResponse.mapToPokemonTypes() =
+    PokemonTypes(
+        type = type?.mapToPokemonType()
+    )
+
+private fun PokemonTypeResponse.mapToPokemonType() =
+    PokemonType(
+        typeName = typeName?.capitalizeFirstLetter()
+    )
+
+private fun String.capitalizeFirstLetter(): String {
+    return this.first().uppercase().plus(this.substring(1))
+}

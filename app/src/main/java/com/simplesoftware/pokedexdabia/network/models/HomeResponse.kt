@@ -64,6 +64,6 @@ fun String.toTypeColor(): Color {
         PokemonTypeNames.GHOST -> Color(0xFF9370DB)
         PokemonTypeNames.DRAGON -> Color(0xFFC8A2C8)
         PokemonTypeNames.PSYCHIC -> Color(0xFFFF69B4)
-        else -> Color.Transparent
+        else -> Color.Black
     }
 }

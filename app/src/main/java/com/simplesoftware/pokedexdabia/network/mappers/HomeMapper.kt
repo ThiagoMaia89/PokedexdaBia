@@ -12,6 +12,7 @@ import com.simplesoftware.pokedexdabia.network.models.PokemonResponse
 import com.simplesoftware.pokedexdabia.network.models.PokemonSpriteResponse
 import com.simplesoftware.pokedexdabia.network.models.PokemonTypeResponse
 import com.simplesoftware.pokedexdabia.network.models.PokemonTypesResponse
+import com.simplesoftware.pokedexdabia.ui.extensions.capitalizeFirstLetter
 
 fun HomeResponse.mapToHome() =
     Home(
@@ -48,7 +49,3 @@ private fun PokemonTypeResponse.mapToPokemonType() =
     PokemonType(
         typeName = typeName?.capitalizeFirstLetter()
     )
-
-private fun String.capitalizeFirstLetter(): String {
-    return this.first().uppercase().plus(this.substring(1))
-}

@@ -15,7 +15,7 @@ import com.simplesoftware.pokedexdabia.network.networkConfig.RetrofitInstance
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val remote: Remote = RemoteImpl(RetrofitInstance.apiService)
+    private val remote: Remote
 ) : ViewModel() {
 
     private val _homeData = MutableLiveData<Home>()
@@ -26,6 +26,9 @@ class HomeViewModel(
 
     private val _pokemonListData = MutableLiveData<List<PokemonDetails>>()
     val pokemonListData: LiveData<List<PokemonDetails>> get() = _pokemonListData
+
+    private val _bottomSheetVisible = MutableLiveData<Boolean>(false)
+    val bottomSheetVisible: LiveData<Boolean> get() = _bottomSheetVisible
 
     private val pokemonList = mutableListOf<PokemonDetails>()
 
@@ -68,5 +71,13 @@ class HomeViewModel(
                 e.printStackTrace()
             }
         }
+    }
+
+    fun openBottomSheet() {
+        _bottomSheetVisible.value = true
+    }
+
+    fun closeBottomSheet() {
+        _bottomSheetVisible.value = false
     }
 }

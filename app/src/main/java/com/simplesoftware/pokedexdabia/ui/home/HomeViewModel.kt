@@ -38,7 +38,6 @@ class HomeViewModel(
     val dropDownExpanded: LiveData<Boolean> get() = _dropDownExpanded
 
     private var pokemonList = mutableListOf<PokemonDetails>()
-    private var pokemonPerTypeList = mutableListOf<PokemonDetails>()
 
     private var cachedPokemonList = listOf<PokemonDetails>()
     private var isSearchStarting = true

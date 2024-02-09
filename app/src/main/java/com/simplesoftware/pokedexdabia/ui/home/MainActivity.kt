@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -188,20 +189,20 @@ class MainActivity : ComponentActivity() {
                 text = {
                     Column {
                         Row {
-                            HeaderIcon(resId = R.drawable.charmander_type, text = "Fogo") {}
-                            HeaderIcon(resId = R.drawable.squirtle_type, text = "Água") {}
+                            HeaderIcon(resId = R.drawable.charmander_type, text = "Fogo") {viewModel.loadListPerType("Fire")}
+                            HeaderIcon(resId = R.drawable.squirtle_type, text = "Água") {viewModel.loadListPerType("Water")}
                             HeaderIcon(resId = R.drawable.bulbasaur_type, text = "Planta") { viewModel.loadListPerType("Grass") }
                             HeaderIcon(resId = R.drawable.eevee_type, text = "Normal") { viewModel.loadListPerType("Normal") }
-                            HeaderIcon(resId = R.drawable.psyduck, text = "Psiquico") {}
-                            HeaderIcon(resId = R.drawable.pikachu_type, text = "Elétrico") {}
-                            HeaderIcon(resId = R.drawable.caterpie, text = "Inseto") {}
-                            HeaderIcon(resId = R.drawable.dratini, text = "Gelo") {}
-                            HeaderIcon(resId = R.drawable.mankey, text = "Lutador") {}
-                            HeaderIcon(resId = R.drawable.pidgey, text = "Voador") {}
+                            HeaderIcon(resId = R.drawable.psyduck, text = "Psiquico") {viewModel.loadListPerType("Psychic")}
+                            HeaderIcon(resId = R.drawable.pikachu_type, text = "Elétrico") {viewModel.loadListPerType("Electric")}
+                            HeaderIcon(resId = R.drawable.caterpie, text = "Inseto") {viewModel.loadListPerType("Bug")}
+                            HeaderIcon(resId = R.drawable.dratini, text = "Gelo") {viewModel.loadListPerType("Ice")}
+                            HeaderIcon(resId = R.drawable.mankey, text = "Lutador") {viewModel.loadListPerType("Fighting")}
+                            HeaderIcon(resId = R.drawable.pidgey, text = "Voador") {viewModel.loadListPerType("Flying")}
                         }
                         Row {
-                            HeaderIcon(resId = R.drawable.umbreon, text = "Noturno") {}
-                            HeaderIcon(resId = R.drawable.venonat, text = "Venenoso") {}
+                            HeaderIcon(resId = R.drawable.umbreon, text = "Noturno") {viewModel.loadListPerType("Dark")}
+                            HeaderIcon(resId = R.drawable.venonat, text = "Venenoso") {viewModel.loadListPerType("Poison")}
                         }
                     }
                 },

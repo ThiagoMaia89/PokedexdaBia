@@ -1,9 +1,11 @@
 package com.simplesoftware.pokedexdabia.ui.home
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,29 +25,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
@@ -65,14 +72,17 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.simplesoftware.pokedexdabia.R
 import com.simplesoftware.pokedexdabia.domain.models.PokemonDetails
+import com.simplesoftware.pokedexdabia.domain.models.PokemonSprite
 import com.simplesoftware.pokedexdabia.ui.extensions.toTypeColor
 import com.simplesoftware.pokedexdabia.ui.theme.PokedexDaBiaTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.koin.core.parameter.parametersOf
+import kotlin.math.round
 
 class MainActivity : ComponentActivity() {
 
     private val viewModel: HomeViewModel by viewModel()
+
+    private var pokemonClicked: PokemonDetails? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +98,7 @@ class MainActivity : ComponentActivity() {
         val pokemonListDataState by viewModel.pokemonListData.observeAsState()
         val interactionSource = remember { MutableInteractionSource() }
         val bottomSheetVisible by viewModel.bottomSheetVisible.observeAsState()
+        val dropDownExpanded by viewModel.dropDownExpanded.observeAsState()
 
         if (loadNextPage) {
             viewModel.loadNextPage()
@@ -118,14 +129,18 @@ class MainActivity : ComponentActivity() {
                         alignment = Alignment.Center,
                         contentScale = ContentScale.Inside
                     )
-                    Header()
+                    Header {
+                        viewModel.searchPokemonList(it)
+                    }
                     LazyVerticalGrid(
                         columns = GridCells.Adaptive(200.dp),
                         horizontalArrangement = Arrangement.Center,
                         contentPadding = PaddingValues(5.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        pokemonListDataState?.forEach { pokemon ->
+                        pokemonListDataState?.sortedBy {
+                            it.id
+                        }?.forEach { pokemon ->
                             item {
                                 PokemonCard(pokemonDetails = pokemon)
                             }
@@ -154,10 +169,56 @@ class MainActivity : ComponentActivity() {
                         contentScale = ContentScale.FillBounds
                     )
                 }
-                if (bottomSheetVisible == true) {
-                    ExtraDetailDialogView()
-                }
+                if (bottomSheetVisible == true) ExtraDetailDialogView(pokemonClicked)
+                if (dropDownExpanded == true) DialogExample()
             }
+        }
+    }
+
+    @Composable
+    fun DialogExample() {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            AlertDialog(
+                onDismissRequest = { viewModel.closeDropDownMenu() },
+                title = { Text("Selecione o tipo") },
+                text = {
+                    Column {
+                        Row {
+                            HeaderIcon(resId = R.drawable.charmander_type, text = "Fogo") {}
+                            HeaderIcon(resId = R.drawable.squirtle_type, text = "Água") {}
+                            HeaderIcon(resId = R.drawable.bulbasaur_type, text = "Planta") { viewModel.loadListPerType("Grass") }
+                            HeaderIcon(resId = R.drawable.eevee_type, text = "Normal") { viewModel.loadListPerType("Normal") }
+                            HeaderIcon(resId = R.drawable.psyduck, text = "Psiquico") {}
+                            HeaderIcon(resId = R.drawable.pikachu_type, text = "Elétrico") {}
+                            HeaderIcon(resId = R.drawable.caterpie, text = "Inseto") {}
+                            HeaderIcon(resId = R.drawable.dratini, text = "Gelo") {}
+                            HeaderIcon(resId = R.drawable.mankey, text = "Lutador") {}
+                            HeaderIcon(resId = R.drawable.pidgey, text = "Voador") {}
+                        }
+                        Row {
+                            HeaderIcon(resId = R.drawable.umbreon, text = "Noturno") {}
+                            HeaderIcon(resId = R.drawable.venonat, text = "Venenoso") {}
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 10.dp,
+                            pressedElevation = 0.dp
+                        ),
+                        onClick = { viewModel.closeDropDownMenu() }) {
+                        Text("Fechar")
+                    }
+                }
+            )
         }
     }
 
@@ -179,6 +240,7 @@ class MainActivity : ComponentActivity() {
         ) {
             Box(
                 modifier = Modifier
+                    .wrapContentWidth(Alignment.Start)
                     .width(800.dp)
                     .padding(16.dp)
             ) {
@@ -208,34 +270,26 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
-            HeaderIcon(
-                resId = R.drawable.charmander,
-                text = "Por tipo",
-                onClick = {
-                    viewModel.openBottomSheet()
+            Box(Modifier.padding(end = 24.dp)) {
+                Row {
+                    HeaderIcon(
+                        resId = R.drawable.evee,
+                        text = "Todos",
+                        onClick = {
+                            viewModel.cleanList()
+                            viewModel.fetchHomeData()
+                        }
+                    )
+                    Spacer(modifier = Modifier.width(24.dp))
+                    HeaderIcon(
+                        resId = R.drawable.fire,
+                        text = "Por Tipo",
+                        onClick = {
+                            viewModel.openDropDownMenu()
+                        }
+                    )
                 }
-            )
-            HeaderIcon(
-                resId = R.drawable.dratini,
-                text = "Por temporada",
-                onClick = {
-
-                }
-            )
-            HeaderIcon(
-                resId = R.drawable.squirtle,
-                text = "Por Região",
-                onClick = {
-
-                }
-            )
-            HeaderIcon(
-                resId = R.drawable.evee,
-                text = "Meus Favoritos",
-                onClick = {
-
-                }
-            )
+            }
         }
     }
 
@@ -266,16 +320,25 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun PokemonCard(
-        pokemonDetails: PokemonDetails
+        pokemonDetails: PokemonDetails,
     ) {
+        val interactionSource = remember { MutableInteractionSource() }
         Card(
             border = BorderStroke(0.5.dp, Color.Transparent),
             modifier = Modifier
                 .wrapContentWidth()
                 .height(200.dp)
-                .padding(5.dp),
+                .padding(5.dp)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                ) {
+                    pokemonClicked = pokemonDetails
+                    viewModel.openDetailDialog()
+                    Log.d("POKEMON CLICADO", pokemonDetails.id.toString())
+                },
             elevation = CardDefaults.cardElevation(
-                defaultElevation = 5.dp,
+                defaultElevation = 10.dp,
                 pressedElevation = 0.dp
             )
         ) {
@@ -301,35 +364,21 @@ class MainActivity : ComponentActivity() {
                 )
                 Text(
                     modifier = Modifier.padding(bottom = 4.dp),
-                    text = pokemonDetails.name ?: "",
+                    text = "${pokemonDetails.id} - ${pokemonDetails.name}",
+                    maxLines = 1,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    fontSize = 20.sp
                 )
                 Row(
                     modifier = Modifier
                         .wrapContentWidth()
                 ) {
                     pokemonDetails.types.forEach {
-                        Box(
-                            modifier = Modifier
-                                .wrapContentSize()
-                                .padding(4.dp)
-                                .shadow(elevation = 5.dp, shape = RoundedCornerShape(20))
-                                .background(
-                                    color = it.type?.typeName?.toTypeColor() ?: Color.Black,
-                                    shape = RoundedCornerShape(20)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                modifier = Modifier
-                                    .padding(horizontal = 4.dp, vertical = 1.dp),
-                                text = it.type?.typeName ?: "",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                        PokemonTypeBox(
+                            color = it.type?.typeName?.toTypeColor(),
+                            typeName = it.type?.typeName
+                        )
                     }
                 }
             }
@@ -337,7 +386,38 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun ExtraDetailDialogView() {
+    fun PokemonTypeBox(color: Color?, typeName: String?, modifier: Modifier = Modifier) {
+        Box(
+            modifier = modifier
+                //.wrapContentSize()
+                .padding(4.dp)
+                .shadow(elevation = 5.dp, shape = RoundedCornerShape(20))
+                .background(
+                    color = color ?: Color.Black,
+                    shape = RoundedCornerShape(20)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = 4.dp, vertical = 1.dp),
+                text = typeName ?: "",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+
+    @Composable
+    fun ExtraDetailDialogView(
+        pokemonDetails: PokemonDetails?
+    ) {
+        val defaultDominantColor = MaterialTheme.colorScheme.surface
+        var dominantColor by remember {
+            mutableStateOf(defaultDominantColor)
+        }
+
         Column(
             modifier = Modifier
                 .wrapContentWidth(Alignment.CenterHorizontally)
@@ -350,28 +430,234 @@ class MainActivity : ComponentActivity() {
                 )
                 .background(
                     brush = Brush.verticalGradient(
-                        listOf(Color(0xFFC7EDFF), Color.White)
+                        listOf(dominantColor, MaterialTheme.colorScheme.surface)
                     ),
                     shape = RoundedCornerShape(10.dp),
                 ),
-            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Este é o conteúdo da BottomSheet",
-                fontSize = 16.sp,
+                modifier = Modifier.padding(top = 32.dp),
+                text = "${pokemonDetails?.id} - ${pokemonDetails?.name}" ?: "",
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.SansSerif,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 8.dp)
             )
-            TextButton(
-                onClick = { viewModel.closeBottomSheet() },
-                colors = ButtonDefaults.textButtonColors(
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+            ) {
+                pokemonDetails?.types?.forEach {
+                    PokemonTypeBox(
+                        color = it.type?.typeName?.toTypeColor(),
+                        typeName = it.type?.typeName,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .width(200.dp)
+                            .weight(1f)
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+
+                val pokemonWeight = remember {
+                    pokemonDetails?.weight?.times(100f)?.let { round(it) / 1000f }
+                }
+
+                val pokemonHeight = remember {
+                    pokemonDetails?.height?.times(100f)?.let { round(it) / 1000f }
+                }
+
+
+                PokemonAttributesView(
+                    iconImageRes = R.drawable.ic_balance,
+                    title = "",
+                    attributeValue = "$pokemonWeight kg",
+                    modifier = Modifier
+                )
+
+                Spacer(
+                    modifier = Modifier
+                        .height(120.dp)
+                        .width(1.dp)
+                        .background(Color.LightGray)
+                )
+
+                PokemonAttributesView(
+                    iconImageRes = R.drawable.ic_height,
+                    title = "",
+                    attributeValue = "$pokemonHeight m",
+                    modifier = Modifier
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .height(300.dp)
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SubcomposeAsyncImage(
+                    modifier = Modifier
+                        .height(300.dp)
+                        .width(300.dp)
+                        .weight(1f),
+                    model = pokemonDetails?.sprite?.imageUrl,
+                    loading = {
+                        CircularProgressIndicator(
+                            color = Color.Red,
+                            modifier = Modifier.scale(0.5f)
+                        )
+                    },
+                    onSuccess = {
+                        viewModel.getDominantColor(it.result.drawable) { color ->
+                            dominantColor = color
+                        }
+                    },
+                    contentDescription = pokemonDetails?.name,
+                    contentScale = ContentScale.Fit
+                )
+
+                PokemonBaseStats(
+                    pokemonDetails = pokemonDetails,
+                    dominantColor = dominantColor,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                onClick = { viewModel.closeDetailDialog() },
+                shape = RoundedCornerShape(10.dp),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 10.dp,
+                    pressedElevation = 0.dp
+                ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = dominantColor,
                     contentColor = Color.White
                 )
             ) {
-                Text("Fechar")
+                Text(
+                    text = "Fechar"
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun PokemonAttributesView(
+        iconImageRes: Int,
+        title: String,
+        attributeValue: String,
+        modifier: Modifier
+    ) {
+        Column(
+            modifier = modifier
+                .height(120.dp)
+                .width(120.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                modifier = Modifier.size(80.dp),
+                painter = painterResource(id = iconImageRes),
+                contentDescription = ""
+            )
+            Text(
+                modifier = Modifier,
+                text = attributeValue,
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+            )
+        }
+    }
+
+    @Composable
+    fun PokemonStatsView(
+        statName: String,
+        statValue: Int,
+        statColor: Color,
+        animDuration: Int = 1000,
+        animDelay: Int = 0
+    ) {
+        var animationPlayed by remember {
+            mutableStateOf(false)
+        }
+        val curPercent = animateFloatAsState(
+            targetValue = if (animationPlayed) {
+                statValue / 100.toFloat()
+            } else 0f,
+            label = "",
+            animationSpec = tween(
+                durationMillis = animDuration,
+                delayMillis = animDelay
+            )
+        )
+        LaunchedEffect(key1 = true) {
+            animationPlayed = true
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp)
+                .height(25.dp)
+                .clip(CircleShape)
+                .background(Color.LightGray)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(fraction = curPercent.value)
+                    .clip(CircleShape)
+                    .background(statColor)
+                    .padding(horizontal = 8.dp)
+            ) {
+                Text(
+                    text = statName,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = (curPercent.value * 100).toInt().toString(),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun PokemonBaseStats(
+        pokemonDetails: PokemonDetails?,
+        animDelayPerItem: Int = 100,
+        dominantColor: Color,
+        modifier: Modifier
+    ) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+        ) {
+            for (i in pokemonDetails!!.stats.indices) {
+                val stat = pokemonDetails.stats[i]
+                PokemonStatsView(
+                    statName = stat.stat?.statName ?: "",
+                    statValue = stat.baseValue ?: 0,
+                    statColor = dominantColor,
+                    animDelay = i * animDelayPerItem
+                )
             }
         }
     }
@@ -391,9 +677,33 @@ class MainActivity : ComponentActivity() {
             onClick = {}
         )
     }
+
     @Composable
     @Preview(device = Devices.TABLET, backgroundColor = 1)
     fun ExtraDetailDialogViewPreview() {
-        ExtraDetailDialogView()
+        ExtraDetailDialogView(
+            PokemonDetails(
+                id = 1,
+                name = "Bulbasaur",
+                sprite = PokemonSprite(
+                    imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"
+                ),
+                types = emptyList(),
+                height = null,
+                weight = null,
+                stats = emptyList()
+            )
+        )
+    }
+
+    @Composable
+    @Preview(device = Devices.TABLET)
+    fun AttributesViewPreview() {
+        PokemonAttributesView(
+            iconImageRes = R.drawable.ic_balance,
+            title = "",
+            attributeValue = "10.0",
+            modifier = Modifier
+        )
     }
 }

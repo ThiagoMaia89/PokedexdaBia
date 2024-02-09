@@ -40,7 +40,10 @@ class PokemonCardViewMock : PreviewParameterProvider<PokemonDetails> {
                                 typeName = "Grass"
                             )
                         ),
-                    )
+                    ),
+                    height = null,
+                    weight = null,
+                    stats = emptyList()
                 )
             )
         }

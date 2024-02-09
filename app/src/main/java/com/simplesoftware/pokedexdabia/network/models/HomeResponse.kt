@@ -10,7 +10,14 @@ data class HomeResponse(
     @SerializedName("previous")
     val previousUrl: String?,
     @SerializedName("results")
-    val pokemonList: List<PokemonResponse>?
+    val pokemonList: List<PokemonResponse>?,
+    @SerializedName("pokemon")
+    val pokemonByTypeList: List<PokemonByTypeListResponse>?
+)
+
+data class PokemonByTypeListResponse(
+    @SerializedName("pokemon")
+    val pokemonByType: PokemonResponse?
 )
 
 data class PokemonResponse(
@@ -26,7 +33,13 @@ data class PokemonDetailsResponse(
     @SerializedName("sprites")
     val sprite: PokemonSpriteResponse?,
     @SerializedName("types")
-    val types: List<PokemonTypesResponse>?
+    val types: List<PokemonTypesResponse>?,
+    @SerializedName("height")
+    val height: Int?,
+    @SerializedName("weight")
+    val weight: Int?,
+    @SerializedName("stats")
+    val stats: List<PokemonStatsListResponse>?
 )
 
 data class PokemonSpriteResponse(
@@ -42,4 +55,16 @@ data class PokemonTypesResponse(
 data class PokemonTypeResponse(
     @SerializedName("name")
     val typeName: String?,
+)
+
+data class PokemonStatsListResponse(
+    @SerializedName("base_stat")
+    val baseValue: Int?,
+    @SerializedName("stat")
+    val stat: PokemonStatResponse?
+)
+
+data class PokemonStatResponse(
+    @SerializedName("name")
+    val statName: String?
 )

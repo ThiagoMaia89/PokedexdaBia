@@ -9,7 +9,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +37,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -47,7 +46,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,6 +59,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -98,8 +97,8 @@ class MainActivity : ComponentActivity() {
         var loadNextPage by remember { mutableStateOf(false) }
         val pokemonListDataState by viewModel.pokemonListData.observeAsState()
         val interactionSource = remember { MutableInteractionSource() }
-        val bottomSheetVisible by viewModel.bottomSheetVisible.observeAsState()
-        val dropDownExpanded by viewModel.dropDownExpanded.observeAsState()
+        val detailDialogVisible by viewModel.detailDialogVisible.observeAsState()
+        val typeExpanded by viewModel.pokemonTypeDialogExpanded.observeAsState()
 
         if (loadNextPage) {
             viewModel.loadNextPage()
@@ -170,39 +169,40 @@ class MainActivity : ComponentActivity() {
                         contentScale = ContentScale.FillBounds
                     )
                 }
-                if (bottomSheetVisible == true) ExtraDetailDialogView(pokemonClicked)
-                if (dropDownExpanded == true) DialogExample()
+                if (detailDialogVisible == true) ExtraDetailDialogView(pokemonClicked)
+                if (typeExpanded == true) PokemonTypeDialog()
             }
         }
     }
 
     @Composable
-    fun DialogExample() {
+    fun PokemonTypeDialog() {
+        val context = LocalContext.current
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             AlertDialog(
-                onDismissRequest = { viewModel.closeDropDownMenu() },
+                onDismissRequest = { viewModel.closeTypeDialog() },
                 title = { Text("Selecione o tipo") },
                 text = {
                     Column {
                         Row {
-                            HeaderIcon(resId = R.drawable.charmander_type, text = "Fogo") {viewModel.loadListPerType("Fire")}
-                            HeaderIcon(resId = R.drawable.squirtle_type, text = "Água") {viewModel.loadListPerType("Water")}
-                            HeaderIcon(resId = R.drawable.bulbasaur_type, text = "Planta") { viewModel.loadListPerType("Grass") }
-                            HeaderIcon(resId = R.drawable.eevee_type, text = "Normal") { viewModel.loadListPerType("Normal") }
-                            HeaderIcon(resId = R.drawable.psyduck, text = "Psiquico") {viewModel.loadListPerType("Psychic")}
-                            HeaderIcon(resId = R.drawable.pikachu_type, text = "Elétrico") {viewModel.loadListPerType("Electric")}
-                            HeaderIcon(resId = R.drawable.caterpie, text = "Inseto") {viewModel.loadListPerType("Bug")}
-                            HeaderIcon(resId = R.drawable.dratini, text = "Gelo") {viewModel.loadListPerType("Ice")}
-                            HeaderIcon(resId = R.drawable.mankey, text = "Lutador") {viewModel.loadListPerType("Fighting")}
-                            HeaderIcon(resId = R.drawable.pidgey, text = "Voador") {viewModel.loadListPerType("Flying")}
+                            HeaderIcon(resId = R.drawable.charmander_type, text = "Fogo") {viewModel.loadListPerType("Fire", context)}
+                            HeaderIcon(resId = R.drawable.squirtle_type, text = "Água") {viewModel.loadListPerType("Water", context)}
+                            HeaderIcon(resId = R.drawable.bulbasaur_type, text = "Planta") { viewModel.loadListPerType("Grass", context) }
+                            HeaderIcon(resId = R.drawable.eevee_type, text = "Normal") { viewModel.loadListPerType("Normal", context) }
+                            HeaderIcon(resId = R.drawable.psyduck, text = "Psiquico") {viewModel.loadListPerType("Psychic", context)}
+                            HeaderIcon(resId = R.drawable.pikachu_type, text = "Elétrico") {viewModel.loadListPerType("Electric", context)}
+                            HeaderIcon(resId = R.drawable.caterpie, text = "Inseto") {viewModel.loadListPerType("Bug", context)}
+                            HeaderIcon(resId = R.drawable.dratini, text = "Gelo") {viewModel.loadListPerType("Ice", context)}
+                            HeaderIcon(resId = R.drawable.mankey, text = "Lutador") {viewModel.loadListPerType("Fighting", context)}
+                            HeaderIcon(resId = R.drawable.pidgey, text = "Voador") {viewModel.loadListPerType("Flying", context)}
                         }
                         Row {
-                            HeaderIcon(resId = R.drawable.umbreon, text = "Noturno") {viewModel.loadListPerType("Dark")}
-                            HeaderIcon(resId = R.drawable.venonat, text = "Venenoso") {viewModel.loadListPerType("Poison")}
+                            HeaderIcon(resId = R.drawable.umbreon, text = "Noturno") {viewModel.loadListPerType("Dark", context)}
+                            HeaderIcon(resId = R.drawable.venonat, text = "Venenoso") {viewModel.loadListPerType("Poison", context)}
                         }
                     }
                 },
@@ -215,7 +215,7 @@ class MainActivity : ComponentActivity() {
                             defaultElevation = 10.dp,
                             pressedElevation = 0.dp
                         ),
-                        onClick = { viewModel.closeDropDownMenu() }) {
+                        onClick = { viewModel.closeTypeDialog() }) {
                         Text("Fechar")
                     }
                 }
@@ -286,7 +286,7 @@ class MainActivity : ComponentActivity() {
                         resId = R.drawable.fire,
                         text = "Por Tipo",
                         onClick = {
-                            viewModel.openDropDownMenu()
+                            viewModel.openTypeDialog()
                         }
                     )
                 }
@@ -410,6 +410,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun ExtraDetailDialogView(
         pokemonDetails: PokemonDetails?
@@ -418,142 +419,147 @@ class MainActivity : ComponentActivity() {
         var dominantColor by remember {
             mutableStateOf(defaultDominantColor)
         }
-
-        Column(
-            modifier = Modifier
-                .wrapContentWidth(Alignment.CenterHorizontally)
-                .wrapContentHeight(Alignment.CenterVertically)
-                .fillMaxHeight(fraction = 0.8f)
-                .fillMaxWidth(fraction = 0.6f)
-                .shadow(
-                    elevation = 10.dp,
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .background(
-                    brush = Brush.verticalGradient(
-                        listOf(dominantColor, MaterialTheme.colorScheme.surface)
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally
+        AlertDialog (
+            onDismissRequest = { viewModel.closeDetailDialog() },
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                modifier = Modifier.padding(top = 32.dp),
-                text = "${pokemonDetails?.id} - ${pokemonDetails?.name}" ?: "",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.SansSerif,
-                textAlign = TextAlign.Center,
-            )
-
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-            ) {
-                pokemonDetails?.types?.forEach {
-                    PokemonTypeBox(
-                        color = it.type?.typeName?.toTypeColor(),
-                        typeName = it.type?.typeName,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .width(200.dp)
-                            .weight(1f)
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+                    .wrapContentHeight(Alignment.CenterVertically)
+                    //.fillMaxSize()
+                    .shadow(
+                        elevation = 10.dp,
+                        shape = RoundedCornerShape(10.dp)
                     )
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 20.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-
-                val pokemonWeight = remember {
-                    pokemonDetails?.weight?.times(100f)?.let { round(it) / 1000f }
-                }
-
-                val pokemonHeight = remember {
-                    pokemonDetails?.height?.times(100f)?.let { round(it) / 1000f }
-                }
-
-
-                PokemonAttributesView(
-                    iconImageRes = R.drawable.ic_balance,
-                    title = "",
-                    attributeValue = "$pokemonWeight kg",
-                    modifier = Modifier
-                )
-
-                Spacer(
-                    modifier = Modifier
-                        .height(120.dp)
-                        .width(1.dp)
-                        .background(Color.LightGray)
-                )
-
-                PokemonAttributesView(
-                    iconImageRes = R.drawable.ic_height,
-                    title = "",
-                    attributeValue = "$pokemonHeight m",
-                    modifier = Modifier
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .height(300.dp)
-                    .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SubcomposeAsyncImage(
-                    modifier = Modifier
-                        .height(300.dp)
-                        .width(300.dp)
-                        .weight(1f),
-                    model = pokemonDetails?.sprite?.imageUrl,
-                    loading = {
-                        CircularProgressIndicator(
-                            color = Color.Red,
-                            modifier = Modifier.scale(0.5f)
-                        )
-                    },
-                    onSuccess = {
-                        viewModel.getDominantColor(it.result.drawable) { color ->
-                            dominantColor = color
-                        }
-                    },
-                    contentDescription = pokemonDetails?.name,
-                    contentScale = ContentScale.Fit
-                )
-
-                PokemonBaseStats(
-                    pokemonDetails = pokemonDetails,
-                    dominantColor = dominantColor,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                onClick = { viewModel.closeDetailDialog() },
-                shape = RoundedCornerShape(10.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 10.dp,
-                    pressedElevation = 0.dp
-                ),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = dominantColor,
-                    contentColor = Color.White
-                )
+                    .background(
+                        brush = Brush.verticalGradient(
+                            listOf(dominantColor, MaterialTheme.colorScheme.surface)
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Fechar"
+                    modifier = Modifier.padding(top = 32.dp),
+                    text = "${pokemonDetails?.id} - ${pokemonDetails?.name}" ?: "",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.SansSerif,
+                    textAlign = TextAlign.Center,
                 )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                ) {
+                    pokemonDetails?.types?.forEach {
+                        PokemonTypeBox(
+                            color = it.type?.typeName?.toTypeColor(),
+                            typeName = it.type?.typeName,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .width(200.dp)
+                                .weight(1f)
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+
+                    val pokemonWeight = remember {
+                        pokemonDetails?.weight?.times(100f)?.let { round(it) / 1000f }
+                    }
+
+                    val pokemonHeight = remember {
+                        pokemonDetails?.height?.times(100f)?.let { round(it) / 1000f }
+                    }
+
+
+                    PokemonAttributesView(
+                        iconImageRes = R.drawable.ic_balance,
+                        title = "",
+                        attributeValue = "$pokemonWeight kg",
+                        modifier = Modifier
+                    )
+
+                    Spacer(
+                        modifier = Modifier
+                            .height(120.dp)
+                            .width(1.dp)
+                            .background(Color.LightGray)
+                    )
+
+                    PokemonAttributesView(
+                        iconImageRes = R.drawable.ic_height,
+                        title = "",
+                        attributeValue = "$pokemonHeight m",
+                        modifier = Modifier
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .height(300.dp)
+                        .padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SubcomposeAsyncImage(
+                        modifier = Modifier
+                            .height(300.dp)
+                            .width(300.dp)
+                            .weight(1f),
+                        model = pokemonDetails?.sprite?.imageUrl,
+                        loading = {
+                            CircularProgressIndicator(
+                                color = Color.Red,
+                                modifier = Modifier.scale(0.5f)
+                            )
+                        },
+                        onSuccess = {
+                            viewModel.getDominantColor(it.result.drawable) { color ->
+                                dominantColor = color
+                            }
+                        },
+                        contentDescription = pokemonDetails?.name,
+                        contentScale = ContentScale.Fit
+                    )
+
+                    PokemonBaseStats(
+                        pokemonDetails = pokemonDetails,
+                        dominantColor = dominantColor,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(Alignment.Bottom)
+                        .padding(horizontal = 64.dp)
+                        .padding(bottom = 32.dp),
+                    onClick = { viewModel.closeDetailDialog() },
+                    shape = RoundedCornerShape(10.dp),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 10.dp,
+                        pressedElevation = 0.dp
+                    ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = dominantColor,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(
+                        text = "Fechar"
+                    )
+                }
             }
         }
     }

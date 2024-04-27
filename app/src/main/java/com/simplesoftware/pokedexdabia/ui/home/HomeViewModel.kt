@@ -1,9 +1,10 @@
 package com.simplesoftware.pokedexdabia.ui.home
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import androidx.compose.runtime.mutableStateOf
+import android.widget.Toast
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,9 +15,7 @@ import com.simplesoftware.pokedexdabia.domain.models.Home
 import com.simplesoftware.pokedexdabia.domain.models.PokemonDetails
 import kotlinx.coroutines.launch
 import androidx.palette.graphics.Palette
-import com.simplesoftware.pokedexdabia.domain.models.PokemonType
 import com.simplesoftware.pokedexdabia.domain.models.PokemonTypes
-import kotlinx.coroutines.Dispatchers
 
 class HomeViewModel(
     private val remote: Remote
@@ -31,11 +30,11 @@ class HomeViewModel(
     private val _pokemonListData = MutableLiveData<List<PokemonDetails>>()
     val pokemonListData: LiveData<List<PokemonDetails>> get() = _pokemonListData
 
-    private val _bottomSheetVisible = MutableLiveData(false)
-    val bottomSheetVisible: LiveData<Boolean> get() = _bottomSheetVisible
+    private val _detailDialogVisible = MutableLiveData(false)
+    val detailDialogVisible: LiveData<Boolean> get() = _detailDialogVisible
 
-    private val _dropDownExpanded = MutableLiveData(false)
-    val dropDownExpanded: LiveData<Boolean> get() = _dropDownExpanded
+    private val _pokemonTypeDialogExpanded = MutableLiveData(false)
+    val pokemonTypeDialogExpanded: LiveData<Boolean> get() = _pokemonTypeDialogExpanded
 
     private var pokemonList = mutableListOf<PokemonDetails>()
 
@@ -83,7 +82,7 @@ class HomeViewModel(
         }
     }
 
-    fun loadListPerType(typeName: String) {
+    fun loadListPerType(typeName: String, context: Context) {
         val pokemonTypeList : MutableList<PokemonTypes> = emptyList<PokemonTypes>().toMutableList()
         pokemonList.forEach {
             it.types.forEach { types ->
@@ -94,8 +93,12 @@ class HomeViewModel(
             it.type?.typeName!!.contains(typeName, ignoreCase = true)
         }
 
-        _pokemonListData.value = pokemonList.filter {
-            it.types.contains(pokemonListToShow.first())
+        if (pokemonListToShow.isNotEmpty()) {
+            _pokemonListData.value = pokemonList.filter {
+                it.types.contains(pokemonListToShow.first())
+            }
+        } else {
+            Toast.makeText(context, "Nenhum tipo encontrado na lista atual", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -138,18 +141,18 @@ class HomeViewModel(
     }
 
     fun openDetailDialog() {
-        _bottomSheetVisible.value = true
+        _detailDialogVisible.value = true
     }
 
     fun closeDetailDialog() {
-        _bottomSheetVisible.value = false
+        _detailDialogVisible.value = false
     }
 
-    fun openDropDownMenu() {
-        _dropDownExpanded.value = true
+    fun openTypeDialog() {
+        _pokemonTypeDialogExpanded.value = true
     }
 
-    fun closeDropDownMenu() {
-        _dropDownExpanded.value = false
+    fun closeTypeDialog() {
+        _pokemonTypeDialogExpanded.value = false
     }
 }
